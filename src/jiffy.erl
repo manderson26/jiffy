@@ -7,6 +7,7 @@
 
 -on_load(init/0).
 
+-spec decode( binary() | iolist() ) -> maybe_improper_list().
 decode(Data) when is_binary(Data) ->
     case nif_decode(Data) of
         {error, _} = Error ->
@@ -20,10 +21,11 @@ decode(Data) when is_list(Data) ->
     decode(iolist_to_binary(Data)).
 
 
+-spec encode( maybe_improper_list() ) -> binary() | iolist().
 encode(Data) ->
     encode(Data, []).
 
-
+-spec encode( maybe_improper_list(), list() ) -> binary() | iolist().
 encode(Data, Options) ->
     ForceUTF8 = lists:member(force_utf8, Options),
     case nif_encode(Data, Options) of
@@ -38,7 +40,7 @@ encode(Data, Options) ->
             IOData
     end.
 
-
+-spec finish_decode(any()) -> maybe_improper_list().
 finish_decode({bignum, Value}) ->
     list_to_integer(binary_to_list(Value));
 finish_decode({bignum_e, Value}) ->
@@ -70,7 +72,7 @@ finish_decode_arr([], Acc) ->
 finish_decode_arr([V | Vals], Acc) ->
     finish_decode_arr(Vals, [finish_decode(V) | Acc]).
 
-
+-spec finish_encode(iolist(), iolist()) -> iolist().
 finish_encode([], Acc) ->
     %% No reverse! The NIF returned us
     %% the pieces in reverse order.
